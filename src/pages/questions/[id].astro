@@ -1,0 +1,44 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { questions } from '@/data/questions';
+import { Button } from '@/components/ui/button';
+import { QuestionHeader } from '@/components/questions/QuestionHeader';
+import { QuestionInput } from '@/components/questions/QuestionInput';
+import { BaseCard } from '@/components/ui/base-card';
+import '@/styles/globals.css';
+
+export function getStaticPaths() {
+  return questions.map(question => ({
+    params: { id: question.id },
+    props: { question },
+  }));
+}
+
+const { question } = Astro.props;
+---
+
+<Layout title={question.title}>
+  <main class="min-h-screen bg-white">
+    <div class="container mx-auto px-4 py-12 max-w-3xl">
+      <QuestionHeader title={question.title} description={question.description} />
+      
+      <div class="space-y-6">
+        {question.questions.map((q, index) => (
+          <BaseCard>
+            <QuestionInput
+              type={q.type}
+              questionNumber={index + 1}
+              text={q.text}
+            />
+          </BaseCard>
+        ))}
+      </div>
+      
+      <div class="mt-12 flex justify-end">
+        <Button class="bg-amber-600 hover:bg-amber-700 text-white font-medium px-8">
+          Save Responses
+        </Button>
+      </div>
+    </div>
+  </main>
+</Layout>

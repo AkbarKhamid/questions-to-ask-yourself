@@ -1,0 +1,32 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { QuestionCard } from '@/components/QuestionCard';
+import { questions } from '@/data/questions';
+import '@/styles/globals.css';
+---
+
+<Layout title="Self-Reflection Questions">
+  <main class="min-h-screen bg-white">
+    <div class="container mx-auto px-4 py-12">
+      <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">
+          Life's Big Questions
+        </h1>
+        <p class="text-gray-700 text-lg max-w-2xl mx-auto">
+          Take time to reflect on important life decisions. Each card leads to a
+          thoughtful questionnaire designed to help you gain clarity.
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {
+          questions.map((question) => (
+            <a href={`/questions/${question.id}`} class="h-full">
+              <QuestionCard question={question} className="h-full" />
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </main>
+</Layout>
