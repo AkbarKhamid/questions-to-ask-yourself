@@ -3,30 +3,128 @@ import Layout from '../layouts/Layout.astro';
 import { QuestionCard } from '@/components/QuestionCard';
 import { questions } from '@/data/questions';
 import '@/styles/globals.css';
+
+// Get unique categories and count their occurrences
+const categoryCount = questions.reduce((acc, question) => {
+  acc[question.category] = (acc[question.category] || 0) + 1;
+  return acc;
+}, {} as Record<string, number>);
+
+// Sort categories by name
+const sortedCategories = Object.entries(categoryCount).sort(([a], [b]) => a.localeCompare(b));
 ---
 
-<Layout title="Self-Reflection Questions">
-  <main class="min-h-screen bg-white">
+<Layout title="Self-Reflection Questions"> 
+  <main class="min-h-screen bg-white"> 
     <div class="container mx-auto px-4 py-12">
       <div class="text-center mb-12">
         <h1 class="text-4xl font-bold text-gray-900 mb-4">
           Life's Big Questions
         </h1>
-        <p class="text-gray-700 text-lg max-w-2xl mx-auto">
+        <p class="text-gray-700 text-lg max-w-2xl mx-auto mb-8">
           Take time to reflect on important life decisions. Each card leads to a
           thoughtful questionnaire designed to help you gain clarity.
-        </p>
+        </p> 
+
+        {/* Search Box */}
+        <div class="max-w-2xl mx-auto mb-12">
+          <input 
+            type="text" 
+            id="search-box"
+            placeholder="Should I ..."
+            class="w-full px-4 py-3 rounded-lg border-2 border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none transition-colors text-lg"
+          />
+        </div>
       </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {
-          questions.map((question) => (
-            <a href={`/questions/${question.id}`} class="h-full">
-              <QuestionCard question={question} className="h-full" />
-            </a>
-          ))
-        }
+
+      <div id="questions-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {questions.map((question, index) => (
+          <QuestionCard question={question} index={index} />
+        ))}
+      </div>
+
+      {/* Category Index */}
+      <div class="mt-24 pt-12">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-8">Categories Index</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-24 gap-y-4">
+          <div class="flex items-baseline cursor-pointer hover:text-amber-600 group" data-category="all">
+            <span class="capitalize text-gray-800 font-semibold w-[160px] group-hover:text-amber-600">All</span>
+            <div class="flex-1 mx-8 border-b-[3px] border-dotted border-gray-400 mb-1 group-hover:border-amber-200" />
+            <span class="text-gray-800 font-semibold group-hover:text-amber-600 pl-2 w-8 text-right">{questions.length}</span>
+          </div>
+          {sortedCategories.map(([category, count], index) => (
+            <div class="flex items-baseline cursor-pointer hover:text-amber-600 group" data-category={category}>
+              <span class="capitalize text-gray-800 font-semibold w-[160px] group-hover:text-amber-600">{category}</span>
+              <div class="flex-1 mx-8 border-b-[3px] border-dotted border-gray-400 mb-1 group-hover:border-amber-200" />
+              <span class="text-gray-800 font-semibold group-hover:text-amber-600 pl-2 w-8 text-right">{count}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   </main>
 </Layout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const grid = document.getElementById('questions-grid');
+    const categoryElements = document.querySelectorAll('[data-category]');
+    const searchBox = document.getElementById('search-box');
+    let activeCategory = 'all';
+
+    // Search functionality
+    searchBox?.addEventListener('input', (e) => {
+      const searchTerm = (e.target as HTMLInputElement).value.toLowerCase();
+      const cards = grid?.children;
+      if (!cards) return;
+
+      Array.from(cards).forEach((card: Element) => {
+        const title = card.querySelector('h3')?.textContent?.toLowerCase() || '';
+        const description = card.querySelector('p')?.textContent?.toLowerCase() || '';
+        
+        if (title.includes(searchTerm) || description.includes(searchTerm)) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+    });
+
+    // Existing category filter code
+    categoryElements.forEach(element => {
+      element.addEventListener('click', () => {
+        const category = element.getAttribute('data-category');
+        if (!category) return;
+
+        document.querySelector(`[data-category="${activeCategory}"]`)
+          ?.classList.remove('text-amber-600');
+
+        element.classList.add('text-amber-600');
+        activeCategory = category;
+
+        const cards = grid?.children;
+        if (!cards) return;
+
+        Array.from(cards).forEach((card: Element) => {
+          const cardCategory = card.querySelector('.capitalize')?.textContent?.toLowerCase();
+          if (category === 'all' || cardCategory === category) {
+            card.classList.remove('hidden');
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+
+        // Clear search box when changing categories
+        if (searchBox instanceof HTMLInputElement) {
+          searchBox.value = '';
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  .overflow-hidden {
+    text-overflow: clip;
+  }
+</style>

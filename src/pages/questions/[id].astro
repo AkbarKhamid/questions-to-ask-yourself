@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { QuestionHeader } from '@/components/questions/QuestionHeader';
 import { QuestionInput } from '@/components/questions/QuestionInput';
 import { BaseCard } from '@/components/ui/base-card';
+import { UnsavedChangesAlert } from '@/components/questions/UnsavedChangesAlert';
+import { Sparkles, ArrowLeft } from "lucide-react"
 import '@/styles/globals.css';
 
 export function getStaticPaths() {
@@ -20,25 +22,90 @@ const { question } = Astro.props;
 <Layout title={question.title}>
   <main class="min-h-screen bg-white">
     <div class="container mx-auto px-4 py-12 max-w-3xl">
+      <Button className="my-4" variant="ghost" size="lg" id="back-button" client:load>
+        <ArrowLeft className="w-6 h-6 mr-2" />
+        Back
+      </Button>
       <QuestionHeader title={question.title} description={question.description} />
       
-      <div class="space-y-6">
+      <div class="space-y-6" id="questions-container"> 
         {question.questions.map((q, index) => (
-          <BaseCard>
+          <BaseCard className="p-6">
             <QuestionInput
+              client:load
               type={q.type}
               questionNumber={index + 1}
               text={q.text}
+              options={q.options}
             />
           </BaseCard>
         ))}
       </div>
       
       <div class="mt-12 flex justify-end">
-        <Button class="bg-amber-600 hover:bg-amber-700 text-white font-medium px-8">
-          Save Responses
+        <Button client:load id="analyze-button">
+          <Sparkles className="w-4 h-4 mr-2" />
+          Analyze responses
         </Button>
       </div>
     </div>
   </main>
 </Layout>
+
+<UnsavedChangesAlert client:load />
+
+<script>
+  const responses = new Map();
+  let hasChanges = false;
+  let showingAlert = false;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const questionsContainer = document.getElementById('questions-container');
+    const backButton = document.getElementById('back-button');
+    
+    // Listen for question-change events
+    questionsContainer?.addEventListener('question-change', ((event: CustomEvent) => {
+      const { questionNumber, value } = event.detail;
+      responses.set(questionNumber - 1, value); 
+      hasChanges = true;
+      
+      // Dispatch an event to update the component state
+      const updateEvent = new CustomEvent('update-question-value', {
+        detail: { questionNumber, value },
+        bubbles: true
+      });
+      event.target?.dispatchEvent(updateEvent);
+      
+      console.log('Updated responses:', Object.fromEntries(responses));
+    }) as EventListener);
+
+    // Handle form submission
+    const analyzeButton = document.getElementById('analyze-button');
+    analyzeButton?.addEventListener('click', () => {
+      console.log('Final responses:', Object.fromEntries(responses));
+      hasChanges = false;
+    });
+
+
+    // Handle back button click
+    backButton?.addEventListener('click', () => {
+      if (hasChanges) {
+        showingAlert = true;
+        const event = new CustomEvent('show-unsaved-alert', {
+          detail: {
+            onConfirm: () => {
+              showingAlert = false;
+              window.location.href = '/';
+            },
+            onCancel: () => {
+              showingAlert = false;
+            }
+          }
+        });
+        document.dispatchEvent(event);
+      } else {
+        window.location.href = '/';
+      }
+    });
+  });
+</script>
