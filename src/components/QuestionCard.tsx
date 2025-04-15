@@ -31,7 +31,8 @@ export function QuestionCard({
           <div className="mb-3" onClick={handleBadgeClick}>
             <Badge
               variant="outline"
-              className="capitalize cursor-pointer hover:bg-amber-100 transition-colors"
+              className="category-badge capitalize cursor-pointer hover:bg-amber-100 transition-colors"
+              data-category-value={question.category}
             >
               {question.category}
             </Badge>

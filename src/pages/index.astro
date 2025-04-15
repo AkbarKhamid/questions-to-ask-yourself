@@ -19,21 +19,26 @@ const sortedCategories = Object.entries(categoryCount).sort(([a], [b]) => a.loca
     <div class="container mx-auto px-4 py-12">
       <div class="text-center mb-12">
         <h1 class="text-4xl font-bold text-gray-900 mb-4">
-          Life's Big Questions
+          Gain Clarity
         </h1>
-        <p class="text-gray-700 text-lg max-w-2xl mx-auto mb-8">
-          Take time to reflect on important life decisions. Each card leads to a
-          thoughtful questionnaire designed to help you gain clarity.
-        </p> 
+
+        <p class="text-gray-600 mb-8">
+          Fun and thought-provoking questions to help you a little when making decisions. <br> No data is collected.
+        </p>
 
         {/* Search Box */}
-        <div class="max-w-2xl mx-auto mb-12">
+        <div class="max-w-2xl mx-auto mb-8">
           <input 
             type="text" 
             id="search-box"
             placeholder="Should I ..."
             class="w-full px-4 py-3 rounded-lg border-2 border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none transition-colors text-lg"
           />
+        </div>
+
+        {/* Selected Categories Chips Area */}
+        <div id="selected-categories" class="max-w-2xl mx-auto mb-6 flex flex-wrap gap-2">
+          {/* Chips will be rendered here by script */}
         </div>
       </div>
 
@@ -68,58 +73,119 @@ const sortedCategories = Object.entries(categoryCount).sort(([a], [b]) => a.loca
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const grid = document.getElementById('questions-grid');
+    const allCards = Array.from(grid?.children || []);
     const categoryElements = document.querySelectorAll('[data-category]');
-    const searchBox = document.getElementById('search-box');
-    let activeCategory = 'all';
+    const searchBox = document.getElementById('search-box') as HTMLInputElement;
+    const selectedCategoriesContainer = document.getElementById('selected-categories');
+    let selectedCategories = new Set<string>();
 
-    // Search functionality
-    searchBox?.addEventListener('input', (e) => {
-      const searchTerm = (e.target as HTMLInputElement).value.toLowerCase();
+    // --- Helper Functions ---
+
+    function filterQuestions() {
+      const searchTerm = searchBox.value.toLowerCase();
       const cards = grid?.children;
       if (!cards) return;
 
       Array.from(cards).forEach((card: Element) => {
         const title = card.querySelector('h3')?.textContent?.toLowerCase() || '';
         const description = card.querySelector('p')?.textContent?.toLowerCase() || '';
-        
-        if (title.includes(searchTerm) || description.includes(searchTerm)) {
+        const cardCategory = card.querySelector('.category-badge')?.getAttribute('data-category-value')?.toLowerCase() || ''; // Use a data attribute
+
+        const categoryMatch = selectedCategories.size === 0 || selectedCategories.has(cardCategory);
+        const searchMatch = searchTerm === '' || title.includes(searchTerm) || description.includes(searchTerm);
+
+        if (categoryMatch && searchMatch) {
           card.classList.remove('hidden');
         } else {
           card.classList.add('hidden');
         }
       });
-    });
+    }
 
-    // Existing category filter code
+    function renderChips() {
+      if (!selectedCategoriesContainer) return;
+      selectedCategoriesContainer.innerHTML = ''; // Clear existing chips
+
+      // Update category list visual state
+      categoryElements.forEach(el => {
+        const category = el.getAttribute('data-category');
+        if (!category) return;
+        if (category === 'all' && selectedCategories.size === 0) {
+          el.classList.add('text-amber-600', 'font-bold');
+          el.querySelectorAll('span, div').forEach(span => span.classList.add('font-bold', 'text-amber-600', 'border-amber-200'));
+        } else if (category !== 'all' && selectedCategories.has(category)) {
+          el.classList.add('text-amber-600', 'font-bold');
+          el.querySelectorAll('span, div').forEach(span => span.classList.add('font-bold', 'text-amber-600', 'border-amber-200'));
+        } else {
+          el.classList.remove('text-amber-600', 'font-bold');
+          el.querySelectorAll('span, div').forEach(span => span.classList.remove('font-bold', 'text-amber-600', 'border-amber-200'));
+        }
+      });
+       // Add visual cue for 'All' when nothing is selected
+      const allCategoryEl = document.querySelector('[data-category="all"]');
+      if (selectedCategories.size === 0) {
+          allCategoryEl?.classList.add('text-amber-600', 'font-bold');
+          allCategoryEl?.querySelectorAll('span, div').forEach(span => span.classList.add('font-bold', 'text-amber-600', 'border-amber-200'));
+      } else {
+          allCategoryEl?.classList.remove('text-amber-600', 'font-bold');
+          allCategoryEl?.querySelectorAll('span, div').forEach(span => span.classList.remove('font-bold', 'text-amber-600', 'border-amber-200'));
+      }
+
+
+      selectedCategories.forEach(category => {
+        const chip = document.createElement('div');
+        chip.className = 'flex items-center bg-amber-100 text-amber-800 text-sm font-medium px-3 py-1 rounded-full';
+
+        const categoryText = document.createElement('span');
+        categoryText.textContent = category;
+        categoryText.className = 'capitalize';
+        chip.appendChild(categoryText);
+
+        const removeButton = document.createElement('button');
+        removeButton.innerHTML = '&times;'; // 'x' symbol
+        removeButton.className = 'ml-2 text-amber-600 hover:text-amber-800 font-bold text-lg leading-none focus:outline-none';
+        removeButton.onclick = () => {
+          selectedCategories.delete(category);
+          renderChips(); // Re-render chips
+          filterQuestions(); // Re-filter questions
+        };
+        chip.appendChild(removeButton);
+
+        selectedCategoriesContainer.appendChild(chip);
+      });
+    }
+
+    // --- Event Listeners ---
+
+    // Search functionality
+    searchBox?.addEventListener('input', filterQuestions);
+
+    // Category filter functionality
     categoryElements.forEach(element => {
       element.addEventListener('click', () => {
         const category = element.getAttribute('data-category');
         if (!category) return;
 
-        document.querySelector(`[data-category="${activeCategory}"]`)
-          ?.classList.remove('text-amber-600');
-
-        element.classList.add('text-amber-600');
-        activeCategory = category;
-
-        const cards = grid?.children;
-        if (!cards) return;
-
-        Array.from(cards).forEach((card: Element) => {
-          const cardCategory = card.querySelector('.capitalize')?.textContent?.toLowerCase();
-          if (category === 'all' || cardCategory === category) {
-            card.classList.remove('hidden');
+        if (category === 'all') {
+          selectedCategories.clear();
+        } else {
+          if (selectedCategories.has(category)) {
+            selectedCategories.delete(category);
           } else {
-            card.classList.add('hidden');
+            selectedCategories.add(category);
           }
-        });
-
-        // Clear search box when changing categories
-        if (searchBox instanceof HTMLInputElement) {
-          searchBox.value = '';
         }
+
+        renderChips(); // Update chips and category list visuals
+        filterQuestions(); // Update the grid based on new selection
+
+        // Optional: Clear search box when changing categories? You decided against this before.
+        // searchBox.value = '';
       });
     });
+
+    // Initial render
+    renderChips(); // Render chips (initially empty) and set 'All' style
   });
 </script>
 
