@@ -16,6 +16,10 @@ export default defineConfig({
     tailwind({
       applyBaseStyles: false,
     }),
-    sitemap(),
+    sitemap({
+      priority: 0.9,
+      lastmod: new Date().toISOString(),
+      changefreq: "daily",
+    }),
   ],
 });
