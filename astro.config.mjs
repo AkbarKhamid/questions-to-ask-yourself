@@ -9,7 +9,7 @@ import sitemap from "@astrojs/sitemap";
 // https://astro.build/config
 export default defineConfig({
   output: "static",
-  site: "https://questinstoaskyourself.com",
+  site: "https://www.questionstoaskyourself.com",
 
   integrations: [
     react(),

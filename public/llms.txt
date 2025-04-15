@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://questinstoaskyourself.com/sitemap-index.xml
+Sitemap: https://www.questionstoaskyourself.com/sitemap-index.xml
