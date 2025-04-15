@@ -14,7 +14,7 @@ const categoryCount = questions.reduce((acc, question) => {
 const sortedCategories = Object.entries(categoryCount).sort(([a], [b]) => a.localeCompare(b));
 ---
 
-<Layout title="Self-Reflection Questions"> 
+<Layout title="Questions to ask yourself - Gain Clarity"> 
   <main class="min-h-screen bg-white"> 
     <div class="container mx-auto px-4 py-12">
       <div class="text-center mb-12">
@@ -22,7 +22,7 @@ const sortedCategories = Object.entries(categoryCount).sort(([a], [b]) => a.loca
           Gain Clarity
         </h1>
 
-        <p class="text-gray-600 mb-8">
+        <p class="text-gray-600 mb-8"> 
           Fun and thought-provoking questions to help you a little when making decisions. <br> No data is collected.
         </p>
 
